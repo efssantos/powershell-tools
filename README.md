@@ -192,11 +192,20 @@ powershell-tools/
     ```
 
 * **[`Repair-WindowsUpdate.ps1`](./workstation/Repair-WindowsUpdate.ps1)**
-  * **Finalidade:** Corrige computadores com travamentos causados por falhas de atualização e alto uso de CPU por TiWorker/svchost.
-  * **Destaque:** Para com segurança os serviços do Windows Update, limpa a fila do BITS, recria as pastas de cache corrompidas (`SoftwareDistribution` e `catroot2`), reseta os sockets de rede e força uma nova busca de atualizações.
+  * **Finalidade:** Corrige computadores com travamentos, alto uso de CPU e falhas de instalação no Windows Update, com correção dedicada para o erro **`0x80004002`** (`E_NOINTERFACE`).
+  * **Destaque:**
+    * **Correção 0x80004002:** Re-registra todas as bibliotecas COM e Proxy-Stubs do WUA (`wups2.dll`, `wups.dll`, `wuaueng.dll`, `wuapi.dll`, etc.) que causam o erro de interface não suportada.
+    * Restaura descritores de segurança (SDDL) nos serviços `wuauserv` e `bits`.
+    * Garante a inicialização correta do `TrustedInstaller` (Windows Modules Installer) e do orquestrador `UsoSvc`.
+    * Limpa caches corrompidos (`SoftwareDistribution` e `catroot2`) e reseta Winsock/WinHTTP.
+    * Suporte a reparo profundo de imagem (`-DeepRepair`) via DISM e SFC e remoção de políticas órfãs de WSUS (`-ResetWsusPolicy`).
   * **Exemplo de uso:**
     ```powershell
+    # Reparo padrão (inclui re-registro de DLLs e resolução do erro 0x80004002)
     .\workstation\Repair-WindowsUpdate.ps1
+
+    # Reparo avançado com DISM, SFC e limpeza de WSUS
+    .\workstation\Repair-WindowsUpdate.ps1 -DeepRepair -ResetWsusPolicy
     ```
 
 ---
