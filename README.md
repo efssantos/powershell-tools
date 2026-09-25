@@ -26,13 +26,13 @@ powershell-tools/
 │   └── Manage-CriticalServices.ps1      # Monitoramento e recuperação automática de serviços essenciais
 ├── virtual machine/
 │   ├── Get-HyperVSummary.ps1            # Resumo de VMs Hyper-V (Estado, CPU, RAM, Checkpoints)
-│   └── VirtualMachineTemplate.ps1       # Provisionamento de nova VM a partir de template VHDX
+│   └── Get-VirtualMachineTemplate.ps1       # Provisionamento de nova VM a partir de template VHDX
 ├── workstation/
 │   ├── Get-WorkstationDiagnostics.ps1   # Diagnóstico rápido de hardware, SMART, bateria, BSOD e pendências
 │   ├── Install-RemoteSoftware.ps1       # Instalação silenciosa e remota de softwares via Winget ou MSI/EXE
 │   ├── Optimize-WorkstationPerformance.ps1 # Otimização de desempenho, limpeza de navegadores, TRIM e inicialização
 │   └── Repair-WindowsUpdate.ps1         # Correção e redefinição de componentes travados do Windows Update
-├── CleanTempFiles.ps1                   # Script legado de limpeza rápida da pasta Temp do usuário
+│
 └── README.md
 ```
 
