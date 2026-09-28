@@ -4,12 +4,14 @@
 
 <br>
 
-![Powershell](https://img.shields.io/badge/Microsoft_Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)
+![Powershell](https://img.shields.io/badge/Powershell-tools-blue?style=for-the-badge)
 
 ![Commit Activity](https://img.shields.io/github/commit-activity/t/efssantos/powershell-tools
 )
 
 <br>
+
+</div>
 
 Este repositório contém um conjunto de scripts e utilitários em PowerShell desenvolvidos para otimizar e facilitar a rotina diária de administradores de sistemas, analistas de suporte e engenheiros de infraestrutura.
 
