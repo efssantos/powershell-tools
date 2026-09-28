@@ -24,27 +24,35 @@ Os scripts estão organizados por categorias em diretórios específicos, seguin
 ```plaintext
 powershell-tools/
 ├── active directory/
+│   ├── Audit-InactiveAccounts.ps1       # Auditoria de contas de usuários e computadores inativos (>90 dias)
 │   ├── Audit-LocalAdministrators.ps1    # Auditoria de membros do grupo local de Administradores
 │   └── Audit-LockedAccounts.ps1         # Consulta e desbloqueio de contas de usuário no AD
 ├── maintenance/
 │   ├── Clean-ServerTempFiles.ps1        # Limpeza aprofundada de arquivos temporários e caches
-│   └── Find-LargeFiles.ps1              # Localizador rápido de grandes arquivos em disco
+│   ├── Find-LargeFiles.ps1              # Localizador rápido de grandes arquivos em disco
+│   └── Sync-FileShareBackup.ps1         # Sincronização resiliente e réplica de compartilhamentos com Robocopy
 ├── network/
 │   ├── Get-NetworkDiagnostics.ps1       # Diagnóstico de interfaces, IP, rotas e testes DNS/Internet
 │   └── Test-PortConnectivity.ps1        # Teste de conectividade e portas TCP com latência
 ├── security/
-│   └── Get-RecentEventErrors.ps1        # Varredura e sumarização de erros nos Logs de Eventos
+│   ├── Audit-ServerSecurityBaseline.ps1 # Auditoria de hardening e conformidade (SMBv1, NLA, Firewall, UAC, PPL)
+│   ├── Get-RecentEventErrors.ps1        # Varredura e sumarização de erros nos Logs de Eventos
+│   └── Test-CertificateExpiration.ps1   # Validação de expiração de certificados SSL/TLS locais, IIS e remotos
 ├── system/
+│   ├── Get-MultiServerDiskReport.ps1    # Monitoramento e consolidação de disco em múltiplos servidores (HTML/CSV)
 │   ├── Get-ServerHealthReport.ps1       # Health check do servidor (CPU, RAM, Discos, Top Processos, HTML)
 │   └── Manage-CriticalServices.ps1      # Monitoramento e recuperação automática de serviços essenciais
 ├── virtual machine/
 │   ├── Get-HyperVSummary.ps1            # Resumo de VMs Hyper-V (Estado, CPU, RAM, Checkpoints)
-│   └── Get-VirtualMachineTemplate.ps1       # Provisionamento de nova VM a partir de template VHDX
+│   └── Get-VirtualMachineTemplate.ps1   # Provisionamento de nova VM a partir de template VHDX
 ├── workstation/
+│   ├── Backup-UserProfile.ps1           # Backup e migração de perfil (Desktop, Docs, Favoritos, Assinaturas, Wi-Fi)
+│   ├── Get-InstalledSoftware.ps1        # Inventário detalhado de softwares instalados (32/64-bit, AppX, remoto)
 │   ├── Get-WorkstationDiagnostics.ps1   # Diagnóstico rápido de hardware, SMART, bateria, BSOD e pendências
 │   ├── Install-RemoteSoftware.ps1       # Instalação silenciosa e remota de softwares via Winget ou MSI/EXE
 │   ├── Optimize-WorkstationPerformance.ps1 # Otimização de desempenho, limpeza de navegadores, TRIM e inicialização
-│   └── Repair-WindowsUpdate.ps1         # Correção e redefinição de componentes travados do Windows Update
+│   ├── Repair-WindowsUpdate.ps1         # Correção e redefinição de componentes travados do Windows Update
+│   └── Reset-NetworkStack.ps1           # Restauração e redefinição de pilha TCP/IP, Winsock, DNS e adaptadores
 │
 └── README.md
 ```
@@ -95,6 +103,16 @@ powershell-tools/
     .\system\Manage-CriticalServices.ps1 -AutoRestart
     ```
 
+* **[`Get-MultiServerDiskReport.ps1`](./system/Get-MultiServerDiskReport.ps1)**
+  * **Finalidade:** Coleta e consolida a capacidade e o espaço livre em disco de múltiplos servidores simultaneamente.
+  * **Destaque:** Suporta lista manual de servidores, arquivo de texto (`-ComputerList`) ou descoberta automática via Active Directory (`-FromAD`). Alerta volumes com espaço crítico (<= 10%) e emite relatórios em CSV e Dashboard HTML responsivo com barras de preenchimento visual.
+  * **Exemplo de uso:**
+    ```powershell
+    .\system\Get-MultiServerDiskReport.ps1 -ComputerName "SRV-DC01", "SRV-FS01", "SRV-SQL01"
+    .\system\Get-MultiServerDiskReport.ps1 -ComputerList "C:\Scripts\servidores.txt" -ExportHtml "C:\Temp\Discos.html"
+    .\system\Get-MultiServerDiskReport.ps1 -FromAD -ExportCsv "C:\Temp\Discos.csv"
+    ```
+
 ---
 
 ### 🧹 3. Manutenção & Armazenamento (`maintenance/`)
@@ -115,6 +133,15 @@ powershell-tools/
     ```powershell
     .\maintenance\Find-LargeFiles.ps1 -Path "C:\" -MinSizeMB 500 -Top 20
     .\maintenance\Find-LargeFiles.ps1 -Path "D:\Backups" -MinSizeMB 1024 -ExportCsv "C:\Temp\relatorio_arquivos.csv"
+    ```
+
+* **[`Sync-FileShareBackup.ps1`](./maintenance/Sync-FileShareBackup.ps1)**
+  * **Finalidade:** Sincronização e réplica de alta velocidade entre diretórios e compartilhamentos de rede com motor Robocopy.
+  * **Destaque:** Cópia paralela multi-thread (`-Threads`), preservação de permissões NTFS / ACLs (`-CopyAcl`), modo espelhamento (`-Mirror`), exclusão inteligente de arquivos temporários/lixeiras e geração de sumário analítico com tempo e arquivos transferidos.
+  * **Exemplo de uso:**
+    ```powershell
+    .\maintenance\Sync-FileShareBackup.ps1 -SourcePath "D:\Dados" -DestinationPath "\\SRV-BACKUP\Replica_Dados"
+    .\maintenance\Sync-FileShareBackup.ps1 -SourcePath "D:\Departamentos" -DestinationPath "E:\Backup" -Mirror -CopyAcl
     ```
 
 ---
@@ -140,6 +167,16 @@ powershell-tools/
     .\active directory\Audit-LocalAdministrators.ps1 -ComputerName "SRV-APP-02"
     ```
 
+* **[`Audit-InactiveAccounts.ps1`](./active directory/Audit-InactiveAccounts.ps1)**
+  * **Finalidade:** Localiza e audita contas de usuários e computadores inativos no Active Directory há mais de X dias (Padrão: 90 dias).
+  * **Destaque:** Suporta filtragem por tipo (`User`, `Computer` ou `All`), escopo por Unidade Organizacional (`-SearchBase`), cálculo exato de dias de inatividade, exportação para CSV e desativação segura (`-DisableInactive` com suporte a `-WhatIf`).
+  * **Exemplo de uso:**
+    ```powershell
+    .\active directory\Audit-InactiveAccounts.ps1
+    .\active directory\Audit-InactiveAccounts.ps1 -DaysInactive 120 -AccountType User
+    .\active directory\Audit-InactiveAccounts.ps1 -AccountType Computer -ExportCsv "C:\Temp\Computadores_Inativos.csv"
+    ```
+
 ---
 
 ### 🛡️ 5. Segurança & Diagnósticos (`security/`)
@@ -151,6 +188,26 @@ powershell-tools/
     ```powershell
     .\security\Get-RecentEventErrors.ps1
     .\security\Get-RecentEventErrors.ps1 -Hours 48 -MaxEvents 50
+    ```
+
+* **[`Audit-ServerSecurityBaseline.ps1`](./security/Audit-ServerSecurityBaseline.ps1)**
+  * **Finalidade:** Audita a conformidade de segurança e hardening do sistema operacional (Servidores e Workstations).
+  * **Destaque:** Valida itens críticos como desativação do SMBv1, ativação de RDP NLA, status de todos os perfis do Firewall, mitigação de Responder via desativação de LLMNR, status da conta Guest, UAC, proteção RunAsPPL no LSASS, Defender/Antivírus e reinicialização pendente. Possui opção de autocorreção (`-Remediate`) e geração de painel HTML/CSV.
+  * **Exemplo de uso:**
+    ```powershell
+    .\security\Audit-ServerSecurityBaseline.ps1
+    .\security\Audit-ServerSecurityBaseline.ps1 -ExportHtml "C:\Temp\Baseline_Seguranca.html"
+    .\security\Audit-ServerSecurityBaseline.ps1 -Remediate
+    ```
+
+* **[`Test-CertificateExpiration.ps1`](./security/Test-CertificateExpiration.ps1)**
+  * **Finalidade:** Valida prazos de validade e expiração de certificados digitais SSL/TLS para evitar paradas inesperadas de serviços.
+  * **Destaque:** Inspeciona repositórios locais do Windows (`My` e `WebHosting`), certificados vinculados a sites HTTPS no IIS e testa endpoints remotos (Websites, LDAPS, APIs) via socket e handshake TLS com suporte a limites customizáveis (`-WarningDays`, `-CriticalDays`), CSV e painel HTML com badges coloridas.
+  * **Exemplo de uso:**
+    ```powershell
+    .\security\Test-CertificateExpiration.ps1
+    .\security\Test-CertificateExpiration.ps1 -Endpoints "https://sistemas.empresa.local", "mail.empresa.local:443"
+    .\security\Test-CertificateExpiration.ps1 -WarningDays 45 -ExportHtml "C:\Temp\Certificados.html"
     ```
 
 ---
@@ -223,6 +280,36 @@ powershell-tools/
 
     # Reparo completo com limpeza de WSUS órfão e reinicialização automática
     .\workstation\Repair-WindowsUpdate.ps1 -ResetWsusPolicy -RestartComputer
+    ```
+
+* **[`Reset-NetworkStack.ps1`](./workstation/Reset-NetworkStack.ps1)**
+  * **Finalidade:** Restauração e reparo completo da conectividade de rede, DNS, Winsock e adaptadores em estações e servidores.
+  * **Destaque:** Libera e renova DHCP, limpa e registra o DNS (`/flushdns`, `/registerdns`), purga tabelas NetBIOS e ARP, redefine o catálogo Winsock, restaura as pilhas TCP/IP IPv4/IPv6, zera proxies WinHTTP presos e executa testes finais de conectividade ao Gateway e Internet com opção de reinicialização de adaptadores (`-RestartAdapters`).
+  * **Exemplo de uso:**
+    ```powershell
+    .\workstation\Reset-NetworkStack.ps1
+    .\workstation\Reset-NetworkStack.ps1 -RestartAdapters
+    .\workstation\Reset-NetworkStack.ps1 -RestartAdapters -RestartComputer
+    ```
+
+* **[`Backup-UserProfile.ps1`](./workstation/Backup-UserProfile.ps1)**
+  * **Finalidade:** Backup estruturado e acelerado de perfis de usuário para substituição de computadores, migrações e formatações.
+  * **Destaque:** Salva Área de Trabalho, Documentos, Favoritos, Downloads (`-IncludeDownloads`), Mídias (`-IncludeMedia`), Assinaturas do Microsoft Outlook, favoritos do Chrome/Edge, banco de notas do Sticky Notes e exporta perfis de redes Wi-Fi conhecidas. Utiliza Robocopy multi-thread `/MT:8` e gera log completo no destino.
+  * **Exemplo de uso:**
+    ```powershell
+    .\workstation\Backup-UserProfile.ps1 -DestinationPath "D:\Backups"
+    .\workstation\Backup-UserProfile.ps1 -DestinationPath "\\SRV-FS01\Migracao" -IncludeDownloads -IncludeMedia
+    .\workstation\Backup-UserProfile.ps1 -UserName "joao.silva" -DestinationPath "E:\Backup_Joao"
+    ```
+
+* **[`Get-InstalledSoftware.ps1`](./workstation/Get-InstalledSoftware.ps1)**
+  * **Finalidade:** Inventário abrangente de softwares instalados localmente ou em estações/servidores remotos.
+  * **Destaque:** Inspeciona registros de 64-bit, 32-bit (Wow6432Node), instalações por usuário e pacotes UWP/AppX (`-IncludeAppx`). Suporta filtragem por nome com curingas (`-Name "*Office*"`), consulta remota via WinRM (`-ComputerName`) e exportação para CSV ou Dashboard HTML formatado.
+  * **Exemplo de uso:**
+    ```powershell
+    .\workstation\Get-InstalledSoftware.ps1
+    .\workstation\Get-InstalledSoftware.ps1 -Name "*Adobe*"
+    .\workstation\Get-InstalledSoftware.ps1 -ComputerName "SRV-APP-01", "PC-FIN-02" -ExportHtml "C:\Temp\Softwares.html"
     ```
 
 ---
