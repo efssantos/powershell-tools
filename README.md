@@ -1,4 +1,15 @@
-# 🛠️ PowerShell Tools - Administração de Servidores e Infraestrutura de TI
+# ☁️ PowerShell Tools
+
+<div align="center">
+
+<br>
+
+![Powershell](https://img.shields.io/badge/Microsoft_Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)
+
+![Commit Activity](https://img.shields.io/github/commit-activity/t/efssantos/powershell-tools
+)
+
+<br>
 
 Este repositório contém um conjunto de scripts e utilitários em PowerShell desenvolvidos para otimizar e facilitar a rotina diária de administradores de sistemas, analistas de suporte e engenheiros de infraestrutura.
 
@@ -38,7 +49,7 @@ powershell-tools/
 
 ---
 
-## 🚀 Guia dos Scripts por Categoria
+## 📖 Guia dos Scripts por Categoria
 
 ### 🌐 1. Rede (`network/`)
 
@@ -192,20 +203,24 @@ powershell-tools/
     ```
 
 * **[`Repair-WindowsUpdate.ps1`](./workstation/Repair-WindowsUpdate.ps1)**
-  * **Finalidade:** Corrige computadores com travamentos, alto uso de CPU e falhas de instalação no Windows Update, com correção dedicada para o erro **`0x80004002`** (`E_NOINTERFACE`).
+  * **Finalidade:** Solução definitiva para travamentos, alto uso de CPU e falhas de instalação no Windows Update, com correção estrutural para o erro **`0x80004002`** (`E_NOINTERFACE`).
   * **Destaque:**
-    * **Correção 0x80004002:** Re-registra todas as bibliotecas COM e Proxy-Stubs do WUA (`wups2.dll`, `wups.dll`, `wuaueng.dll`, `wuapi.dll`, etc.) que causam o erro de interface não suportada.
-    * Restaura descritores de segurança (SDDL) nos serviços `wuauserv` e `bits`.
-    * Garante a inicialização correta do `TrustedInstaller` (Windows Modules Installer) e do orquestrador `UsoSvc`.
-    * Limpa caches corrompidos (`SoftwareDistribution` e `catroot2`) e reseta Winsock/WinHTTP.
-    * Suporte a reparo profundo de imagem (`-DeepRepair`) via DISM e SFC e remoção de políticas órfãs de WSUS (`-ResetWsusPolicy`).
+    * **Correção do DoSvc no Registro:** Reabilita o serviço de Otimização de Entrega (`Start = 2`) no registro (causa #1 do 0x80004002 em estações com scripts de debloat).
+    * **Re-registro COM em 64-bit e 32-bit (SysWOW64):** Registra `wups2.dll`, `wups.dll`, `wuaueng.dll`, `wuapi.dll`, `actxprxy.dll` e componentes OLE em ambas as arquiteturas.
+    * **Desbloqueio e Purga do DataStore.edb:** Finaliza processos bloqueadores (`TiWorker`, `TrustedInstaller`) e recria o banco de dados e `catroot2`.
+    * **Consistência de WMI e DCOM:** Executa validação `winmgmt /salvagerepository` e assegura `EnableDCOM = 'Y'`.
+    * **Motor de Diagnóstico Oficial:** Aciona o solucionador autônomo nativo da Microsoft (`WindowsUpdateDiagnostic`).
+    * **Reparo Automático da Imagem (DISM & SFC):** Executa `DISM /RestoreHealth`, `DISM /StartComponentCleanup` e `SFC /scannow` por padrão (com opção `-SkipDism` para pular se desejado).
   * **Exemplo de uso:**
     ```powershell
-    # Reparo padrão (inclui re-registro de DLLs e resolução do erro 0x80004002)
+    # Reparo completo e definitivo (inclui DoSvc, DLLs 32/64, WMI, DISM e SFC)
     .\workstation\Repair-WindowsUpdate.ps1
 
-    # Reparo avançado com DISM, SFC e limpeza de WSUS
-    .\workstation\Repair-WindowsUpdate.ps1 -DeepRepair -ResetWsusPolicy
+    # Reparo rápido sem executar DISM/SFC
+    .\workstation\Repair-WindowsUpdate.ps1 -SkipDism
+
+    # Reparo completo com limpeza de WSUS órfão e reinicialização automática
+    .\workstation\Repair-WindowsUpdate.ps1 -ResetWsusPolicy -RestartComputer
     ```
 
 ---
